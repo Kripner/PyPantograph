@@ -2,23 +2,71 @@ from typing import Optional, Tuple
 from dataclasses import dataclass, field
 from pantograph.expr import GoalState
 
+
+@dataclass(frozen=True)
+class MetavarDeclInfo:
+    userName: str
+    type: str
+    depth: int
+    kind: str
+    numScopeArgs: int
+    index: int
+
+    @staticmethod
+    def parse(payload: dict):
+        return MetavarDeclInfo(
+            userName=payload["userName"],
+            type=payload["type"],
+            depth=payload["depth"],
+            kind=payload["kind"],
+            numScopeArgs=payload["numScopeArgs"],
+            index=payload["index"],
+        )
+
+
+@dataclass(frozen=True)
+class MctxInfo:
+    depth: int
+    levelAssignDepth: int
+    mvarCounter: int
+    decls: dict[str, MetavarDeclInfo]
+    userNames: dict[str, str]
+
+    @staticmethod
+    def parse(payload: dict):
+        return MctxInfo(
+            depth=payload["depth"],
+            levelAssignDepth=payload["levelAssignDepth"],
+            mvarCounter=payload["mvarCounter"],
+            decls={k: MetavarDeclInfo.parse(v) for k, v in payload["decls"]},
+            userNames=dict(payload["userNames"]),
+        )
+
 @dataclass(frozen=True)
 class TacticInvocation:
     """
     One tactic invocation with the before/after goals extracted from Lean source
     code.
     """
-    before: str
-    after: str
+    before: list[str]
+    beforeIds: list[str]
+    after: list[str]
+    afterIds: list[str]
     tactic: str
+    mctxBefore: MctxInfo
+    mctxAfter: MctxInfo
     used_constants: list[str]
 
     @staticmethod
     def parse(payload: dict):
         return TacticInvocation(
-            before=payload["goalBefore"],
-            after=payload["goalAfter"],
+            before=payload["goalBefore"].split("\n\n"),
+            beforeIds=payload["goalBeforeIds"],
+            after=payload["goalAfter"].split("\n\n"),
+            afterIds=payload["goalAfterIds"],
             tactic=payload["tactic"],
+            mctxBefore=MctxInfo.parse(payload["mctxBefore"]),
+            mctxAfter=MctxInfo.parse(payload["mctxAfter"]),
             used_constants=payload.get('usedConstants', []),
         )
 
