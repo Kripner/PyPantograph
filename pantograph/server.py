@@ -323,6 +323,7 @@ class Server:
             "sorrys": False,
             "newConstants": False,
             "typeErrorsAsGoals": False,
+            "proof_trees": True,
         })
         if "error" in result:
             raise ServerError(result)
@@ -343,6 +344,7 @@ class Server:
             "sorrys": True,
             "newConstants": False,
             "typeErrorsAsGoals": False,
+            "proof_trees": False,
         })
         if "error" in result:
             raise ServerError(result)

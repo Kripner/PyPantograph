@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Tuple
 from dataclasses import dataclass, field
 from pantograph.expr import GoalState
@@ -65,8 +66,8 @@ class TacticInvocation:
             after=payload["goalAfter"].split("\n\n"),
             afterIds=payload["goalAfterIds"],
             tactic=payload["tactic"],
-            mctxBefore=MctxInfo.parse(payload["mctxBefore"]),
-            mctxAfter=MctxInfo.parse(payload["mctxAfter"]),
+            mctxBefore=MctxInfo.parse(payload["mctxBefore"]) if payload.get("mctxBefore") else None,
+            mctxAfter=MctxInfo.parse(payload["mctxAfter"]) if payload.get("mctxAfter") else None,
             used_constants=payload.get('usedConstants', []),
         )
 
@@ -85,6 +86,8 @@ class CompilationUnit:
     goal_src_boundaries: Optional[list[Tuple[int, int]]] = None
 
     new_constants: Optional[list[str]] = None
+
+    proof_tree_steps: Optional[list[list[dict]]] = None
 
     @staticmethod
     def parse(payload: dict, goal_state_sentinel=None):
@@ -108,6 +111,8 @@ class CompilationUnit:
 
         new_constants = payload.get("newConstants")
 
+        proof_tree_steps = payload.get("proof_tree_edges")
+
         return CompilationUnit(
             i_begin,
             i_end,
@@ -115,5 +120,6 @@ class CompilationUnit:
             invocations,
             goal_state,
             goal_src_boundaries,
-            new_constants
+            new_constants,
+            proof_tree_steps,
         )
